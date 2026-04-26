@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:nixspace_test;DB_CLOSE_DELAY=-1;MODE=MySQL;NON_KEYWORDS=USER
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false  # DDL is handled by Hibernate in tests
+
+  data:
+    redis:
+      host: localhost
+      port: 6370    # overridden by Testcontainers in integration tests
+
+  kafka:
+    bootstrap-servers: localhost:9999  # overridden by @EmbeddedKafka
+
+nixspace:
+  jwt:
+    secret: TestSecretKeyForJwtSigningDoNotUseInProduction!
+    access-token-expiry:  3600000
+    refresh-token-expiry: 604800000
+  aws:
+    region: us-east-1
+    s3:
+      bucket: test-bucket
+      presigned-url-expiry: 3600
+  websocket:
+    allowed-origins:
+      - http://localhost:3000
+  upload:
+    max-file-size: 52428800
+    allowed-mime-types:
+      - image/jpeg
+      - image/png
+      - application/pdf
+
+logging:
+  level:
+    com.nixspace: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG

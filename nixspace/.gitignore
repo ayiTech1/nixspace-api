@@ -1,0 +1,30 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+*.swp
+
+# Environment
+.env
+*.env.local
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (local)
+.docker/
+
+# Spring Boot devtools restart trigger
+.reloadtrigger
