@@ -1,81 +1,36 @@
 package com.nixspace.domain.model;
 
-import com.nixspace.common.enums.ContentType;
-import com.nixspace.common.enums.MessageType;
+import com.nixspace.domain.enums.ContentType;
+import com.nixspace.domain.enums.MessageType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
-
 @Entity
 @Table(name = "messages")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @Builder @AllArgsConstructor
 public class Message extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String messageId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "channel_id", nullable = false)
-    private Channel channel;
+    private String channelId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_user_id", nullable = false)
-    private User sender;
+    private String senderId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_message_id")
-    private Message parentMessage;
-
-    @OneToMany(mappedBy = "parentMessage", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<Message> replies = new ArrayList<>();
+    private String parentMessageId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "message_type", nullable = false, length = 20)
-    @Builder.Default
-    private MessageType messageType = MessageType.USER;
+    private MessageType messageType;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "content_type", nullable = false, length = 20)
-    @Builder.Default
-    private ContentType contentType = ContentType.PLAIN;
+    private ContentType contentType;
 
-    @Column(name = "is_edited", nullable = false)
-    @Builder.Default
-    private boolean edited = false;
+    private boolean edited;
 
-    @Column(name = "is_deleted", nullable = false)
-    @Builder.Default
-    private boolean deleted = false;
+    private boolean deleted;
 
-    @Column(name = "reply_count", nullable = false)
-    @Builder.Default
-    private int replyCount = 0;
-
-    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<MessageReaction> reactions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<MessageFile> files = new ArrayList<>();
-
-    public void incrementReplyCount() {
-        this.replyCount++;
-    }
-
-    public void softDelete() {
-        this.deleted = true;
-        this.content = "[deleted]";
-    }
+    private int replyCount;
 }

@@ -1,47 +1,31 @@
 package com.nixspace.domain.model;
 
-import com.nixspace.common.enums.NotificationType;
+import com.nixspace.domain.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
-
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "notifications")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @Builder @AllArgsConstructor
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String userId;
+
+    private String entityId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
     private NotificationType type;
 
-    @Column(name = "entity_type", nullable = false, length = 50)
     private String entityType;
 
-    @Column(name = "entity_id", nullable = false)
-    private Long entityId;
+    private String actorId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "actor_id")
-    private User actor;
+    @Column(name = "is_read")
+    private boolean read;
 
-    @Column(name = "is_read", nullable = false)
-    @Builder.Default
-    private boolean read = false;
-
-    @Column(name = "created_at", nullable = false)
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt;
 }

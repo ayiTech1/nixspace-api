@@ -1,60 +1,42 @@
 package com.nixspace.domain.model;
 
-import com.nixspace.common.enums.ChannelType;
+import com.nixspace.domain.enums.ChannelType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
-
 @Entity
 @Table(name = "channels")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @Builder @AllArgsConstructor
 public class Channel extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String channelId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
+    private String workspaceId;
 
-    @Column(nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private ChannelType type = ChannelType.PUBLIC;
+    private ChannelType type;
 
-    @Column(length = 250)
     private String topic;
 
-    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    private User createdBy;
+    private String createdBy;
 
-    @Column(name = "is_archived", nullable = false)
-    @Builder.Default
-    private boolean archived = false;
+    private boolean archived;
 
-    @Column(name = "is_default", nullable = false)
-    @Builder.Default
-    private boolean defaultChannel = false;
+    private boolean defaultChannel;
 
-    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ChannelMember> members = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "channel_members", joinColumns = @JoinColumn(name = "channelId"))
+    @Column(name = "userId")
+    private List<String> workspaceMemberId;
 
-    @OneToMany(mappedBy = "channel", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Message> messages = new ArrayList<>();
+    @ElementCollection
+    @CollectionTable(name = "messages", joinColumns = @JoinColumn(name = "channelId"))
+    @Column(name = "messageId")
+    private List<String> messageId;
 }

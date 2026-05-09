@@ -1,183 +1,121 @@
 package com.nixspace.api.controller;
 
-import com.nixspace.api.dto.request.ChannelRequests.*;
-import com.nixspace.api.dto.response.Responses.*;
-import com.nixspace.domain.service.ChannelService;
-import com.nixspace.security.UserPrincipal;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.nixspace.api.service.ChannelService;
+import com.nixspace.domain.request.ChannelMemberRequest;
+import com.nixspace.domain.request.ChannelRequest;
+import com.nixspace.domain.request.NotificationPreferenceRequest;
+import com.nixspace.domain.response.OperationResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/workspaces/{workspaceId}/channels")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Channels", description = "Channel management within a workspace")
+@RequestMapping("channel")
+@Slf4j
 public class ChannelController {
 
-    private final ChannelService channelService;
+    @Autowired
+    ChannelService channelService;
 
-    // ─── Channel CRUD ─────────────────────────────────────────────────────
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new channel in the workspace")
-    public ChannelResponse createChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @Valid @RequestBody CreateChannelRequest request
-    ) {
-        return channelService.createChannel(principal.getId(), workspaceId, request);
+    @PostMapping("create")
+    public OperationResponse createChannel(@RequestBody @Validated ChannelRequest channelRequest) {
+        OperationResponse createChannelResponse = channelService.createChannel(channelRequest);
+        log.info("Response for createChannel {} {}", channelRequest, createChannelResponse);
+        return createChannelResponse;
     }
 
-    @GetMapping
-    @Operation(summary = "List all public channels in the workspace")
-    public List<ChannelResponse> getChannels(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        return channelService.getWorkspaceChannels(principal.getId(), workspaceId);
+    @GetMapping("list-public/{workspaceId}")
+    public OperationResponse listPublicChannels(@PathVariable String workspaceId) {
+        OperationResponse listPublicChannelsResponse = channelService.listPublicChannels(workspaceId);
+        log.info("Response for listPublicChannels {} {}", workspaceId, listPublicChannelsResponse);
+        return listPublicChannelsResponse;
     }
 
-    @GetMapping("/mine")
-    @Operation(summary = "List channels the authenticated user has joined")
-    public List<ChannelResponse> getMyChannels(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        return channelService.getMyChannels(principal.getId(), workspaceId);
+    @GetMapping("list-joined/{workspaceId}/{userId}")
+    public OperationResponse listJoinedChannels(@PathVariable String workspaceId, @PathVariable String userId) {
+        OperationResponse listJoinedChannelsResponse = channelService.listJoinedChannels(workspaceId, userId);
+        log.info("Response for listJoinedChannels {} {} {}", workspaceId, userId, listJoinedChannelsResponse);
+        return listJoinedChannelsResponse;
     }
 
-    @GetMapping("/{channelId}")
-    @Operation(summary = "Get a channel by ID")
-    public ChannelResponse getChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        return channelService.getChannel(principal.getId(), workspaceId, channelId);
+    @GetMapping("retrieve/{channelId}")
+    public OperationResponse getChannelById(@PathVariable String channelId) {
+        OperationResponse getChannelByIdResponse = channelService.getChannelById(channelId);
+        log.info("Response for getChannelById {} {}", channelId, getChannelByIdResponse);
+        return getChannelByIdResponse;
     }
 
-    @PatchMapping("/{channelId}")
-    @Operation(summary = "Update channel name, topic or description")
-    public ChannelResponse updateChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId,
-            @Valid @RequestBody UpdateChannelRequest request
-    ) {
-        return channelService.updateChannel(principal.getId(), workspaceId, channelId, request);
+    @PostMapping("update/{channelId}")
+    public OperationResponse updateChannel(@PathVariable String channelId, @RequestBody @Validated ChannelRequest channelRequest) {
+        OperationResponse updateChannelResponse = channelService.updateChannel(channelId, channelRequest);
+        log.info("Response for updateChannel {} {} {}", channelId, channelRequest, updateChannelResponse);
+        return updateChannelResponse;
     }
 
-    @PostMapping("/{channelId}/archive")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Archive a channel (Admin only)")
-    public void archiveChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        channelService.archiveChannel(principal.getId(), workspaceId, channelId);
+    @PostMapping("archive/{channelId}")
+    public OperationResponse archiveChannel(@PathVariable String channelId) {
+        OperationResponse archiveChannelResponse = channelService.archiveChannel(channelId);
+        log.info("Response for archiveChannel {} {}", channelId, archiveChannelResponse);
+        return archiveChannelResponse;
     }
 
-    @DeleteMapping("/{channelId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Delete a channel (Workspace Admin/Owner only)")
-    public void deleteChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        channelService.deleteChannel(principal.getId(), workspaceId, channelId);
+    @PostMapping("delete/{channelId}")
+    public OperationResponse deleteChannel(@PathVariable String channelId) {
+        OperationResponse deleteChannelResponse = channelService.deleteChannel(channelId);
+        log.info("Response for deleteChannel {} {}", channelId, deleteChannelResponse);
+        return deleteChannelResponse;
     }
 
-    // ─── Membership ───────────────────────────────────────────────────────
-
-    @PostMapping("/{channelId}/join")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Join a public channel")
-    public void joinChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        channelService.joinChannel(principal.getId(), workspaceId, channelId);
+    @PostMapping("join/{channelId}/{userId}")
+    public OperationResponse joinChannel(@PathVariable String channelId, @PathVariable String userId) {
+        OperationResponse joinChannelResponse = channelService.joinChannel(channelId, userId);
+        log.info("Response for joinChannel {} {} {}", channelId, userId, joinChannelResponse);
+        return joinChannelResponse;
     }
 
-    @DeleteMapping("/{channelId}/leave")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Leave a channel")
-    public void leaveChannel(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        channelService.leaveChannel(principal.getId(), workspaceId, channelId);
+    @PostMapping("leave/{channelId}/{userId}")
+    public OperationResponse leaveChannel(@PathVariable String channelId, @PathVariable String userId) {
+        OperationResponse leaveChannelResponse = channelService.leaveChannel(channelId, userId);
+        log.info("Response for leaveChannel {} {} {}", channelId, userId, leaveChannelResponse);
+        return leaveChannelResponse;
     }
 
-    @GetMapping("/{channelId}/members")
-    @Operation(summary = "List members of a channel")
-    public List<ChannelMemberResponse> getMembers(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId
-    ) {
-        return channelService.getChannelMembers(principal.getId(), workspaceId, channelId);
+    @GetMapping("members/{channelId}")
+    public OperationResponse listChannelMembers(@PathVariable String channelId) {
+        OperationResponse listChannelMembersResponse = channelService.listChannelMembers(channelId);
+        log.info("Response for listChannelMembers {} {}", channelId, listChannelMembersResponse);
+        return listChannelMembersResponse;
     }
 
-    @PostMapping("/{channelId}/members/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Add a member to a channel (Channel Admin only)")
-    public void addMember(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId,
-            @PathVariable Long userId
-    ) {
-        channelService.addMember(principal.getId(), workspaceId, channelId, userId);
+    @PostMapping("add-member/{channelId}")
+    public OperationResponse addMemberToChannel(@PathVariable String channelId, @RequestBody @Validated ChannelMemberRequest channelMemberRequest) {
+        OperationResponse addMemberResponse = channelService.addMemberToChannel(channelId, channelMemberRequest);
+        log.info("Response for addMemberToChannel {} {} {}", channelId, channelMemberRequest, addMemberResponse);
+        return addMemberResponse;
     }
 
-    @DeleteMapping("/{channelId}/members/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove a member from a channel (Channel Admin only)")
-    public void removeMember(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId,
-            @PathVariable Long userId
-    ) {
-        channelService.removeMember(principal.getId(), workspaceId, channelId, userId);
+    @PostMapping("remove-member/{channelId}/{userId}")
+    public OperationResponse removeMemberFromChannel(@PathVariable String channelId, @PathVariable String userId) {
+        OperationResponse removeMemberResponse = channelService.removeMemberFromChannel(channelId, userId);
+        log.info("Response for removeMemberFromChannel {} {} {}", channelId, userId, removeMemberResponse);
+        return removeMemberResponse;
     }
 
-    @PatchMapping("/{channelId}/notifications")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Update notification preference for this channel")
-    public void updateNotificationPreference(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long channelId,
-            @Valid @RequestBody UpdateNotificationPrefRequest request
-    ) {
-        channelService.updateNotificationPreference(principal.getId(), channelId, request);
+    @PostMapping("members-notification-preference/{channelId}/{userId}")
+    public OperationResponse updateNotificationPreference(@PathVariable String channelId, @PathVariable String userId,
+                                                          @RequestBody @Validated NotificationPreferenceRequest preferenceRequest) {
+        OperationResponse updateNotificationPreferenceResponse = channelService.updateNotificationPreference(channelId, userId, preferenceRequest);
+        log.info("Response for updateNotificationPreference {} {} {} {}", channelId, userId, preferenceRequest, updateNotificationPreferenceResponse);
+        return updateNotificationPreferenceResponse;
     }
 
-    // ─── Direct Messages ──────────────────────────────────────────────────
-
-    @PostMapping("/dm")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a direct message or group DM channel")
-    public ChannelResponse createDm(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @Valid @RequestBody CreateDmRequest request
-    ) {
-        return channelService.createDirectMessage(principal.getId(), workspaceId, request);
+    @PostMapping("create-direct-message-channel")
+    public OperationResponse createDirectMessageChannel(@RequestBody @Validated ChannelRequest channelRequest) {
+        OperationResponse createDmResponse = channelService.createDirectMessageChannel(channelRequest);
+        log.info("Response for createDirectMessageChannel {} {}", channelRequest, createDmResponse);
+        return createDmResponse;
     }
 }

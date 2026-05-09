@@ -1,38 +1,24 @@
 package com.nixspace.domain.model;
 
-import com.nixspace.common.enums.WorkspaceRole;
+import com.nixspace.domain.enums.WorkspaceRole;
+import com.nixspace.domain.model.ids.WorkspaceMemberId;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "workspace_members")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@IdClass(WorkspaceMemberId.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class WorkspaceMember {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workspace_id", nullable = false)
-    private Workspace workspace;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String workspaceId;
+    @Id
+    private String userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private WorkspaceRole role = WorkspaceRole.MEMBER;
+    private WorkspaceRole role;
 
-    @Column(name = "joined_at", nullable = false)
-    @Builder.Default
-    private Instant joinedAt = Instant.now();
+    private LocalDateTime joinedAt;
 }

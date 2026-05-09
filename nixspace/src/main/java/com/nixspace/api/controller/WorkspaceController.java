@@ -1,138 +1,119 @@
 package com.nixspace.api.controller;
 
-import com.nixspace.api.dto.request.WorkspaceRequests.*;
-import com.nixspace.api.dto.response.Responses.*;
-import com.nixspace.domain.service.WorkspaceService;
-import com.nixspace.security.UserPrincipal;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import com.nixspace.api.constants.ResponseCode;
+import com.nixspace.api.service.WorkspaceService;
+import com.nixspace.domain.request.WorkspaceMemberRequest;
+import com.nixspace.domain.request.WorkspaceRequest;
+import com.nixspace.domain.response.OperationResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
-@RequestMapping("/api/v1/workspaces")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Workspaces", description = "Workspace management and membership")
+@RequestMapping("workspace")
+@Slf4j
 public class WorkspaceController {
 
-    private final WorkspaceService workspaceService;
+    @Autowired
+    WorkspaceService workspaceService;
 
-    // ─── Workspace CRUD ───────────────────────────────────────────────────
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Create a new workspace")
-    public WorkspaceResponse createWorkspace(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @Valid @RequestBody CreateWorkspaceRequest request
-    ) {
-        return workspaceService.createWorkspace(principal.getId(), request);
+    @PostMapping("create")
+    public OperationResponse createWorkspace(@RequestBody @Validated WorkspaceRequest workspaceRequest) {
+        OperationResponse createWorkspaceResponse = workspaceService.createWorkspace(workspaceRequest);
+        log.info("Response for createWorkspace {} {}", workspaceRequest, createWorkspaceResponse);
+        return createWorkspaceResponse;
     }
 
-    @GetMapping
-    @Operation(summary = "List all workspaces the authenticated user belongs to")
-    public List<WorkspaceResponse> getMyWorkspaces(
-            @AuthenticationPrincipal UserPrincipal principal
-    ) {
-        return workspaceService.getMyWorkspaces(principal.getId());
+    @GetMapping("list/{userId}")
+    public OperationResponse listUserWorkspaces(@PathVariable String userId) {
+        OperationResponse listUserWorkspacesResponse = workspaceService.listUserWorkspaces(userId);
+        log.info("Response for listUserWorkspaces {} {}", userId, listUserWorkspacesResponse);
+        return listUserWorkspacesResponse;
     }
 
-    @GetMapping("/{workspaceId}")
-    @Operation(summary = "Get a workspace by ID")
-    public WorkspaceResponse getWorkspace(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        return workspaceService.getWorkspace(principal.getId(), workspaceId);
+    @GetMapping("retrieve/{workspaceId}")
+    public OperationResponse getWorkspaceById(@PathVariable String workspaceId) {
+        OperationResponse getWorkspaceByIdResponse = workspaceService.getWorkspaceById(workspaceId);
+        log.info("Response for getWorkspaceById {} {}", workspaceId, getWorkspaceByIdResponse);
+        return getWorkspaceByIdResponse;
     }
 
-    @GetMapping("/slug/{slug}")
-    @Operation(summary = "Get a workspace by its slug")
-    public WorkspaceResponse getBySlug(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable String slug
-    ) {
-        return workspaceService.getWorkspaceBySlug(principal.getId(), slug);
+    @GetMapping("retrieve-by-slug/{slug}")
+    public OperationResponse getWorkspaceBySlug(@PathVariable String slug) {
+        OperationResponse getWorkspaceBySlugResponse = workspaceService.getWorkspaceBySlug(slug);
+        log.info("Response for getWorkspaceBySlug {} {}", slug, getWorkspaceBySlugResponse);
+        return getWorkspaceBySlugResponse;
     }
 
-    @PatchMapping("/{workspaceId}")
-    @Operation(summary = "Update workspace name or description (Admin/Owner only)")
-    public WorkspaceResponse updateWorkspace(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @Valid @RequestBody UpdateWorkspaceRequest request
-    ) {
-        return workspaceService.updateWorkspace(principal.getId(), workspaceId, request);
+    @PostMapping("update/{workspaceId}")
+    public OperationResponse updateWorkspace(@PathVariable String workspaceId, @RequestBody @Validated WorkspaceRequest workspaceRequest) {
+        OperationResponse updateWorkspaceResponse = workspaceService.updateWorkspace(workspaceId, workspaceRequest);
+        log.info("Response for updateWorkspace {} {} {}", workspaceId, workspaceRequest, updateWorkspaceResponse);
+        return updateWorkspaceResponse;
     }
 
-    @DeleteMapping("/{workspaceId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Permanently delete a workspace (Owner only)")
-    public void deleteWorkspace(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        workspaceService.deleteWorkspace(principal.getId(), workspaceId);
+    @PostMapping("delete/{workspaceId}")
+    public OperationResponse deleteWorkspace(@PathVariable String workspaceId) {
+        OperationResponse deleteWorkspaceResponse = workspaceService.deleteWorkspace(workspaceId);
+        log.info("Response for deleteWorkspace {} {}", workspaceId, deleteWorkspaceResponse);
+        return deleteWorkspaceResponse;
     }
 
-    // ─── Members ──────────────────────────────────────────────────────────
-
-    @GetMapping("/{workspaceId}/members")
-    @Operation(summary = "List all members of a workspace")
-    public List<WorkspaceMemberResponse> getMembers(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        return workspaceService.getMembers(principal.getId(), workspaceId);
+    @GetMapping("members/{workspaceId}")
+    public OperationResponse listWorkspaceMembers(@PathVariable String workspaceId) {
+        OperationResponse listWorkspaceMembersResponse = workspaceService.listWorkspaceMembers(workspaceId);
+        log.info("Response for listWorkspaceMembers {} {}", workspaceId, listWorkspaceMembersResponse);
+        return listWorkspaceMembersResponse;
     }
 
-    @PostMapping("/{workspaceId}/members")
-    @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Invite a user to the workspace by email (Admin/Owner only)")
-    public WorkspaceMemberResponse inviteMember(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @Valid @RequestBody InviteMemberRequest request
-    ) {
-        return workspaceService.inviteMember(principal.getId(), workspaceId, request);
+    @PostMapping("members/invite/{workspaceId}")
+    public OperationResponse inviteMember(@PathVariable String workspaceId, @RequestBody @Validated WorkspaceMemberRequest workspaceMemberRequest) {
+        OperationResponse inviteMemberResponse = workspaceService.inviteMember(workspaceId, workspaceMemberRequest);
+        log.info("Response for inviteMember {} {} {}", workspaceId, workspaceMemberRequest, inviteMemberResponse);
+        return inviteMemberResponse;
     }
 
-    @PatchMapping("/{workspaceId}/members/{userId}/role")
-    @Operation(summary = "Update a member's role (Owner only)")
-    public WorkspaceMemberResponse updateMemberRole(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long userId,
-            @Valid @RequestBody UpdateMemberRoleRequest request
-    ) {
-        return workspaceService.updateMemberRole(principal.getId(), workspaceId, userId, request);
+    @PostMapping("members/update-role/{workspaceId}/{userId}")
+    public OperationResponse updateMemberRole(@PathVariable String workspaceId, @PathVariable String userId,
+                                              @RequestBody @Validated WorkspaceMemberRequest workspaceMemberRequest) {
+        OperationResponse updateMemberRoleResponse = workspaceService.updateMemberRole(workspaceId, userId, workspaceMemberRequest);
+        log.info("Response for updateMemberRole {} {} {} {}", workspaceId, userId, workspaceMemberRequest, updateMemberRoleResponse);
+        return updateMemberRoleResponse;
     }
 
-    @DeleteMapping("/{workspaceId}/members/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove a member from the workspace (Admin/Owner only)")
-    public void removeMember(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId,
-            @PathVariable Long userId
-    ) {
-        workspaceService.removeMember(principal.getId(), workspaceId, userId);
+    @PostMapping("members/remove/{workspaceId}/{userId}")
+    public OperationResponse removeMember(@PathVariable String workspaceId, @PathVariable String userId) {
+        OperationResponse removeMemberResponse = workspaceService.removeMember(workspaceId, userId);
+        log.info("Response for removeMember {} {} {}", workspaceId, userId, removeMemberResponse);
+        return removeMemberResponse;
     }
 
-    @DeleteMapping("/{workspaceId}/leave")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Leave a workspace")
-    public void leaveWorkspace(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long workspaceId
-    ) {
-        workspaceService.leaveWorkspace(principal.getId(), workspaceId);
+    @PostMapping("members/leave/{workspaceId}/{userId}")
+    public OperationResponse leaveWorkspace(@PathVariable String workspaceId, @PathVariable String userId) {
+        OperationResponse leaveWorkspaceResponse = workspaceService.leaveWorkspace(workspaceId, userId);
+        log.info("Response for leaveWorkspace {} {} {}", workspaceId, userId, leaveWorkspaceResponse);
+        return leaveWorkspaceResponse;
+    }
+
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public OperationResponse handleConstraintViolationException(ConstraintViolationException e) {
+        Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
+        StringBuilder strBuilder = new StringBuilder();
+        OperationResponse operationResponse = new OperationResponse();
+        operationResponse.setResponseCode(ResponseCode.BAD_REQUEST);
+        for (ConstraintViolation<?> violation : violations) {
+            strBuilder.append(violation.getMessage()).append(", ");
+        }
+        operationResponse.setResponseMessage(strBuilder.toString());
+        return operationResponse;
     }
 }

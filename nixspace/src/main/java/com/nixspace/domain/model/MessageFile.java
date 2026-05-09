@@ -5,22 +5,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "message_files")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @Builder @AllArgsConstructor
 public class MessageFile {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String messageFileId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "message_id", nullable = false)
-    private Message message;
+    private String messageId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "file_id", nullable = false)
-    private FileEntity file;
+    private String fileEntityId;
 }

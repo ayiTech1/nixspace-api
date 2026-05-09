@@ -1,60 +1,52 @@
 package com.nixspace.api.controller;
 
-import com.nixspace.api.dto.response.Responses.*;
-import com.nixspace.domain.service.NotificationService;
-import com.nixspace.security.UserPrincipal;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.nixspace.api.service.NotificationService;
+import com.nixspace.domain.response.OperationResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+
+
 @RestController
-@RequestMapping("/api/v1/notifications")
-@RequiredArgsConstructor
-@SecurityRequirement(name = "bearerAuth")
-@Tag(name = "Notifications", description = "User notification management")
+@RequestMapping("notification")
+@Slf4j
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    @Autowired
+    NotificationService notificationService;
 
-    @GetMapping
-    @Operation(summary = "List notifications for the authenticated user")
-    public PagedResponse<NotificationResponse> getNotifications(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @RequestParam(defaultValue = "0")  int page,
-            @RequestParam(defaultValue = "20") int size
-    ) {
-        return notificationService.getMyNotifications(
-                principal.getId(),
-                PageRequest.of(page, Math.min(size, 50), Sort.by("createdAt").descending())
-        );
+
+    @GetMapping("list/{userId}")
+    public OperationResponse listNotifications(@PathVariable String userId,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "20") int size) {
+        OperationResponse listNotificationsResponse = notificationService.listNotifications(userId, page, size);
+        log.info("Response for listNotifications {} {} {} {}", userId, page, size, listNotificationsResponse);
+        return listNotificationsResponse;
     }
 
-    @GetMapping("/unread-count")
-    @Operation(summary = "Get the count of unread notifications")
-    public long getUnreadCount(@AuthenticationPrincipal UserPrincipal principal) {
-        return notificationService.getUnreadCount(principal.getId());
+    @GetMapping("unread-count/{userId}")
+    public OperationResponse getUnreadNotificationCount(@PathVariable String userId) {
+        OperationResponse getUnreadNotificationCountResponse = notificationService.getUnreadNotificationCount(userId);
+        log.info("Response for getUnreadNotificationCount {} {}", userId, getUnreadNotificationCountResponse);
+        return getUnreadNotificationCountResponse;
     }
 
-    @PostMapping("/{notificationId}/read")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Mark a single notification as read")
-    public void markRead(
-            @AuthenticationPrincipal UserPrincipal principal,
-            @PathVariable Long notificationId
-    ) {
-        notificationService.markRead(principal.getId(), notificationId);
+    @PostMapping("mark-read/{notificationId}/{userId}")
+    public OperationResponse markNotificationAsRead(@PathVariable String notificationId, @PathVariable String userId) {
+        OperationResponse markNotificationAsReadResponse = notificationService.markNotificationAsRead(notificationId, userId);
+        log.info("Response for markNotificationAsRead {} {} {}", notificationId, userId, markNotificationAsReadResponse);
+        return markNotificationAsReadResponse;
     }
 
-    @PostMapping("/read-all")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Mark all notifications as read")
-    public void markAllRead(@AuthenticationPrincipal UserPrincipal principal) {
-        notificationService.markAllRead(principal.getId());
+    @PostMapping("mark-all-read/{userId}")
+    public OperationResponse markAllNotificationsAsRead(@PathVariable String userId) {
+        OperationResponse markAllNotificationsAsReadResponse = notificationService.markAllNotificationsAsRead(userId);
+        log.info("Response for markAllNotificationsAsRead {} {}", userId, markAllNotificationsAsReadResponse);
+        return markAllNotificationsAsReadResponse;
     }
+
+
+
 }

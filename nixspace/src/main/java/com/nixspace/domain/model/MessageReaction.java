@@ -1,35 +1,22 @@
 package com.nixspace.domain.model;
 
+import com.nixspace.domain.model.ids.MessageReactionId;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
-
+import java.time.LocalDateTime;
 @Entity
 @Table(name = "message_reactions")
-@Getter
-@Setter
-@NoArgsConstructor
-@Builder
-@AllArgsConstructor
+@IdClass(MessageReactionId.class)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class MessageReaction {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "message_id", nullable = false)
-    private Message message;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @Column(nullable = false, length = 50)
+    private String messageId;
+    @Id
+    private String userId;
+    @Id
     private String reaction;
 
-    @Column(name = "created_at", nullable = false)
-    @Builder.Default
-    private Instant createdAt = Instant.now();
+    private LocalDateTime createdAt;
 }
